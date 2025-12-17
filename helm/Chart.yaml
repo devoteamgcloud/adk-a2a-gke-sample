@@ -1,0 +1,6 @@
+apiVersion: v2
+name: adk-a2a-gke-sample
+description: A Helm chart for the ADK a2a GKE sample application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

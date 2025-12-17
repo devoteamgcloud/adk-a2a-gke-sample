@@ -1,0 +1,21 @@
+{{- $cfg := .Values.config | required "A config section is required in your values file. Please create one and provide the necessary values." -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adk-agent-ingress
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    ingress.gcp.kubernetes.io/pre-shared-cert: {{ .Values.deploy.managed_certificate_name | quote }}
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.deploy.static_ip_name | quote }}
+spec:
+  rules:
+  - host: {{ $cfg.A2A_HOST | quote }}
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: adk-agent
+            port:
+              number: 80

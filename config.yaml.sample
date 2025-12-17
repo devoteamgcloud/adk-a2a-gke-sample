@@ -1,0 +1,41 @@
+# This is a sample config file. Please copy this file to a new file
+# named 'config.yaml' in the root directory of your repository.
+# This 'config.yaml' file should contain your environment-specific
+# configurations and should NOT be checked into version control.
+
+# Build configuration
+# These will be used by the `make build` command in order to build the container image using Google Cloud Build
+build:
+  project: "your-gcp-project-id"
+  repository_name: "your-artifact-repository-name"
+  repository_location: "your-artifact-repository-location"
+  image_name: "your-image-name"
+
+# Deploy configuration
+# These will be used by the `make deploy` command in order to deploy the application to GKE using Helm
+deploy:
+  gke_project: "your-gcp-project-id"
+  gke_region: "your-gcp-region"
+  gke_cluster: "your-gke-cluster-name"
+  static_ip_name: "your-static-ip-name"
+  managed_certificate_name: "your-managed-certificate-name"
+
+# Application configuration
+# These will be loaded into the deployed application as environment variables.
+config:
+
+  # The Google Cloud Project to use for Vertex AI
+  GOOGLE_CLOUD_PROJECT: "your-gcp-project-id"
+  # The Google Cloud region to use for Vertex AI
+  GOOGLE_CLOUD_LOCATION: "your-gcp-region"
+
+  # The following variables will be used to construct the "url" value of the A2A Agent Card
+  # "<A2A_PROTOCOL>://<A2A_HOST>:<A2A_PROTOCOL>"
+
+  # The hostname for Agent-to-Agent communication.
+  # This will also be used as the domain for the GKE Gateway and the Google-managed certificate.
+  A2A_HOST: "your-a2a-host"
+  # The port for Agent-to-Agent communication.
+  A2A_PORT: "443"
+  # The protocol for Agent-to-Agent communication (e.g., "https").
+  A2A_PROTOCOL: "https"

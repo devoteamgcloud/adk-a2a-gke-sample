@@ -1,0 +1,59 @@
+{{- $image := .Values.image | required "An image value is required in your values file. Please provide a valid Docker image." -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adk-agent
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adk-agent
+  template:
+    metadata:
+      labels:
+        app: adk-agent
+    spec:
+      serviceAccountName: adk-agent-sa
+      containers:
+        - name: adk-agent
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+          image: {{ $image | quote }}
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: adk-agent-config
+          livenessProbe:
+            httpGet:
+              path: /.well-known/agent-card.json
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /.well-known/agent-card.json
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+              ephemeral-storage: "128Mi"
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+              ephemeral-storage: "128Mi"

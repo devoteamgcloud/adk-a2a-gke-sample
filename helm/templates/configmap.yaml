@@ -1,0 +1,10 @@
+{{- $cfg := .Values.config | required "A config section is required in your values file. Please create one and provide the necessary values." -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: adk-agent-config
+  namespace: {{ .Release.Namespace }}
+data:
+  PORT: "8080"
+  {{- toYaml $cfg | nindent 2 }}
+  GOOGLE_GENAI_USE_VERTEXAI: "1"
