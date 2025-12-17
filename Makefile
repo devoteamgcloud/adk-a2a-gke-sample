@@ -1,4 +1,4 @@
-.PHONY: help install run build deploy undeploy check-env check-config check-tools init-config create-infrastructure create-artifact-registry create-gke-cluster create-static-ip create-managed-certificate grant-iam-role test
+.PHONY: help install run build deploy undeploy check-env check-config check-tools init-config create-infrastructure create-artifact-registry create-gke-cluster create-static-ip create-managed-certificate grant-iam-role test destroy delete-artifact-registry delete-gke-cluster delete-static-ip delete-managed-certificate
 
 # Global Configuration
 APP_NAME := adk-agent
@@ -102,6 +102,35 @@ create-managed-certificate: check-env ## Create the Google-managed SSL certifica
 		gcloud compute ssl-certificates create $$MANAGED_CERT_NAME --domains $$A2A_HOST --global --project=$$GKE_PROJECT; \
 	fi
 
+destroy: undeploy delete-gke-cluster delete-managed-certificate delete-static-ip delete-artifact-registry ## Destroy all infrastructure resources
+	@echo "All resources destroyed."
+
+delete-artifact-registry: check-env ## Delete the Artifact Registry repository
+	@echo "Deleting Artifact Registry repository..."
+	@BUILD_PROJECT=$(call get_config,build,project); \
+	REPO_NAME=$(call get_config,build,repository_name); \
+	REPO_LOCATION=$(call get_config,build,repository_location); \
+	gcloud artifacts repositories delete $$REPO_NAME --location=$$REPO_LOCATION --project=$$BUILD_PROJECT --quiet
+
+delete-gke-cluster: check-env ## Delete the GKE Autopilot cluster
+	@echo "Deleting GKE cluster..."
+	@GKE_PROJECT=$(call get_config,deploy,gke_project); \
+	GKE_REGION=$(call get_config,deploy,gke_region); \
+	GKE_CLUSTER=$(call get_config,deploy,gke_cluster); \
+	gcloud container clusters delete $$GKE_CLUSTER --region=$$GKE_REGION --project=$$GKE_PROJECT --quiet
+
+delete-static-ip: check-env ## Delete the global static IP
+	@echo "Deleting static IP address..."
+	@GKE_PROJECT=$(call get_config,deploy,gke_project); \
+	STATIC_IP_NAME=$(call get_config,deploy,static_ip_name); \
+	gcloud compute addresses delete $$STATIC_IP_NAME --global --project=$$GKE_PROJECT --quiet
+
+delete-managed-certificate: check-env ## Delete the Google-managed SSL certificate
+	@echo "Deleting managed certificate..."
+	@GKE_PROJECT=$(call get_config,deploy,gke_project); \
+	MANAGED_CERT_NAME=$(call get_config,deploy,managed_certificate_name); \
+	gcloud compute ssl-certificates delete $$MANAGED_CERT_NAME --global --project=$$GKE_PROJECT --quiet
+
 # --- Build & Deploy ---
 
 build: check-env ## Build and submit the image to Cloud Build
@@ -130,7 +159,7 @@ deploy: check-env ## Deploy the application to GKE using Helm
 
 undeploy: check-tools ## Uninstall the Helm chart
 	@echo "Uninstalling Helm chart..."
-	helm uninstall $(APP_NAME) --namespace $(APP_NAMESPACE)
+	helm uninstall $(APP_NAME) --namespace $(APP_NAMESPACE) --ignore-not-found
 
 grant-iam-role: check-env ## Grant Vertex AI User role to the K8s Service Account
 	@echo "Granting IAM role..."

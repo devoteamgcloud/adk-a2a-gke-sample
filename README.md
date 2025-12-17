@@ -109,3 +109,9 @@ To uninstall the Helm chart and remove the application from your cluster:
 ```bash
 make undeploy
 ```
+
+To completely remove all infrastructure resources created by this project (GKE cluster, Static IP, SSL Certificate, Artifact Registry):
+
+```bash
+make destroy
+```
